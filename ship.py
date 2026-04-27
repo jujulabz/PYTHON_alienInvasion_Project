@@ -4,25 +4,7 @@ import pygame
 
 
 class Ship:
-    """A class to manage the player's ship.
-    
-    The ship can move in all four directions (up, down, left, right) and
-    can fire bullets. It includes a turbo mode for increased speed.
-    
-    Attributes:
-        screen: The pygame display surface.
-        settings: The game settings object.
-        screen_rect: The rect of the game screen.
-        image: The pygame image for the ship.
-        rect: The rect object for the ship's image.
-        x: The ship's x-coordinate as a float.
-        y: The ship's y-coordinate as a float.
-        moving_right: Flag indicating if the ship should move right.
-        moving_left: Flag indicating if the ship should move left.
-        moving_up: Flag indicating if the ship should move up.
-        moving_down: Flag indicating if the ship should move down.
-        moving_turbo: Flag indicating if turbo speed is active.
-    """
+    """A class to manage the player's ship."""
 
     def __init__(self, ai_game):
         """Initialize the ship and set its starting position.
@@ -81,12 +63,3 @@ class Ship:
     def blitme(self):
         """Draw the ship at its current location on the screen."""
         self.screen.blit(self.image, self.rect)
-
-    def center_ship(self):
-        """Center the ship on the screen.
-        
-        Resets the ship's position to the center bottom of the screen.
-        Used when the ship is hit or the game restarts.
-        """
-        self.rect.midbottom = self.screen_rect.midbottom
-        self.x = float(self.rect.x)
