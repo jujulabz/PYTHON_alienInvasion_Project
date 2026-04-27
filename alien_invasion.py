@@ -124,6 +124,18 @@ class AlienInvasion:
 
             self._update_screen()
             self.clock.tick(60)
+            
+    def _update_aliens(self):
+        """Check if the fleet is at an edge, then update positions.
+        
+        Calls _check_fleet_edges() to handle bouncing behavior, then
+        updates all alien positions.
+        """
+        self.aliens.update()
+
+        # Look for alien-ship collisions.
+        if pygame.sprite.spritecollideany(self.ship, self.aliens):
+            self._ship_hit()
 
     def _check_events(self):
         """Respond to keypresses and mouse events."""
@@ -216,18 +228,6 @@ class AlienInvasion:
             if bullet.rect.left >= self.settings.screen_width:
                 self.bullets.remove(bullet)
 
-    def _update_aliens(self):
-        """Check if the fleet is at an edge, then update positions.
-        
-        Calls _check_fleet_edges() to handle bouncing behavior, then
-        updates all alien positions.
-        """
-        self._check_fleet_edges()
-        self.aliens.update()
-
-        # Look for alien-ship collisions.
-        if pygame.sprite.spritecollideany(self.ship, self.aliens):
-            self._ship_hit()
 
     def _check_fleet_edges(self):
         """Respond appropriately if any aliens have reached an edge.
