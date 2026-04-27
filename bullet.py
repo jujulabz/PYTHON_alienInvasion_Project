@@ -6,7 +6,7 @@ from pygame.sprite import Sprite
 class Bullet(Sprite):
     """A class to manage bullets fired from the ship.
     
-    Bullets spawn at the ship's position and move horizontally to the right.
+    Bullets spawn at the top of the ship and move vertically upward.
     They are removed from the game when they move off-screen.
     
     Attributes:
@@ -14,7 +14,7 @@ class Bullet(Sprite):
         settings: The game settings object.
         color: RGB tuple for the bullet color.
         rect: The rect object for the bullet.
-        x: The bullet's x-coordinate as a float.
+        y: The bullet's y-coordinate as a float.
     """
 
     def __init__(self, ai_game):
@@ -35,17 +35,17 @@ class Bullet(Sprite):
         self.rect.midtop = ai_game.ship.rect.midtop
 
         # Store the bullet's position as a float.
-        self.x = float(self.rect.x)
+        self.y = float(self.rect.y)
 
     def update(self):
-        """Move the bullet horizontally to the right across the screen.
+        """Move the bullet vertically upward across the screen.
         
         Updates the bullet's position based on the configured bullet speed.
         """
         # Update the exact position of the bullet.
-        self.x += self.settings.bullet_speed
+        self.y -= self.settings.bullet_speed
         # Update the rect position.
-        self.rect.x = self.x
+        self.rect.y = self.y
 
     def draw_bullet(self):
         """Draw the bullet as a rectangle on the screen."""
