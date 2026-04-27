@@ -53,10 +53,29 @@ class AlienInvasion:
         
         def _create_fleet(self):
             """Create the fleet of aliens."""
-        # Make an alien.
+        #Create an alien and keep adding aliens until there's no room left.
+        #Spacing between aliens is one alien width and one alien height.
         alien = Alien(self)
-        self.aliens.add(alien)
-
+        alien_width, alien_height = alien.rect.size
+        
+        current_x, current_y = alien_width, alien_height
+        while current_y < (self.settings.screen_height - 3 * alien_height):
+            while current_x < (self.settings.screen_width - 2 * alien_width):
+                self._create_alien(current_x, current_y)
+                current_x += 2 * alien_width
+                
+                #Finished a row; reset x value, and increment y value.
+                current_x = alien_width
+                current_y = 2 * alien_height
+            
+        def _create_alien(self, x_position, y_position):
+            """Create an alien and place it in the fleet."""
+            new_alien = Alien(self)
+            new_alien.x = x_position
+            new_alien.rect.x = x_position
+            new_alien.rect.y = y_position
+            self.aliens.add(new_alien)
+    
     # def _create_fleet(self):
     #     """Create the fleet of aliens.
         
@@ -78,18 +97,18 @@ class AlienInvasion:
     #         current_x = alien_width
     #         current_y += 2 * alien_height
 
-    def _create_alien(self, x_position, y_position):
-        """Create an alien and place it in the fleet.
+    # def _create_alien(self, x_position, y_position):
+    #     """Create an alien and place it in the fleet.
         
-        Args:
-            x_position: The horizontal position for the new alien.
-            y_position: The vertical position for the new alien.
-        """
-        new_alien = Alien(self)
-        new_alien.x = x_position
-        new_alien.rect.x = x_position
-        new_alien.rect.y = y_position
-        self.aliens.add(new_alien)
+    #     Args:
+    #         x_position: The horizontal position for the new alien.
+    #         y_position: The vertical position for the new alien.
+    #     """
+    #     new_alien = Alien(self)
+    #     new_alien.x = x_position
+    #     new_alien.rect.x = x_position
+    #     new_alien.rect.y = y_position
+    #     self.aliens.add(new_alien)
 
     def run_game(self):
         """Start the main loop for the game."""
@@ -176,11 +195,7 @@ class AlienInvasion:
         self.ship.blitme()
         # Draw all active aliens.
         self.aliens.draw(self.screen)
-
-    
-
-
-
+        
         pygame.display.flip()
 
     def _draw_game_over(self):
