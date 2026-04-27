@@ -49,27 +49,34 @@ class AlienInvasion:
         self.bg_color = self.settings.bg_color
         self.game_active = True
         self.ships_left = self.settings.ship_limit
-
-    def _create_fleet(self):
-        """Create the fleet of aliens.
         
-        Aliens are spawned in a grid pattern across the screen,
-        moving horizontally and bouncing at the edges as per Chapter 13.
-        """
-        # Create an alien and keep adding aliens until there's no room left.
-        # Spacing between aliens is one alien width.
+        
+        def _create_fleet(self):
+            """Create the fleet of aliens."""
+        # Make an alien.
         alien = Alien(self)
-        alien_width, alien_height = alien.rect.size
+        self.aliens.add(alien)
 
-        current_x, current_y = alien_width, alien_height
-        while current_y < (self.settings.screen_height - 3 * alien_height):
-            while current_x < (self.settings.screen_width - 2 * alien_width):
-                self._create_alien(current_x, current_y)
-                current_x += 2 * alien_width
+    # def _create_fleet(self):
+    #     """Create the fleet of aliens.
+        
+    #     Aliens are spawned in a grid pattern across the screen,
+    #     moving horizontally and bouncing at the edges as per Chapter 13.
+    #     """
+    #     # Create an alien and keep adding aliens until there's no room left.
+    #     # Spacing between aliens is one alien width.
+    #     alien = Alien(self)
+    #     alien_width, alien_height = alien.rect.size
 
-            # Finished a row; reset x value, and increment y value.
-            current_x = alien_width
-            current_y += 2 * alien_height
+    #     current_x, current_y = alien_width, alien_height
+    #     while current_y < (self.settings.screen_height - 3 * alien_height):
+    #         while current_x < (self.settings.screen_width - 2 * alien_width):
+    #             self._create_alien(current_x, current_y)
+    #             current_x += 2 * alien_width
+
+    #         # Finished a row; reset x value, and increment y value.
+    #         current_x = alien_width
+    #         current_y += 2 * alien_height
 
     def _create_alien(self, x_position, y_position):
         """Create an alien and place it in the fleet.
@@ -166,16 +173,13 @@ class AlienInvasion:
         # Draw all active bullets.
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
-
+        self.ship.blitme()
         # Draw all active aliens.
         self.aliens.draw(self.screen)
 
-        # Draw the ship.
-        self.ship.blitme()
+    
 
-        # Draw game over text if needed.
-        if not self.game_active:
-            self._draw_game_over()
+
 
         pygame.display.flip()
 
