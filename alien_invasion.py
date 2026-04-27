@@ -131,6 +131,7 @@ class AlienInvasion:
         Calls _check_fleet_edges() to handle bouncing behavior, then
         updates all alien positions.
         """
+        self._check_fleet_edges()
         self.aliens.update()
 
         # Look for alien-ship collisions.
@@ -227,7 +228,15 @@ class AlienInvasion:
         for bullet in self.bullets.copy():
             if bullet.rect.left >= self.settings.screen_width:
                 self.bullets.remove(bullet)
-
+        # Check for any bullets that have hit aliens.
+        #   If so, get rid of the bullet and the alien.
+        
+        collisions = pygame.sprite.groupcollide(
+            self.bullets, self.aliens, True, True)
+        if not self.aliens:
+            # Destroy existing bullets and create new fleet.
+            self.bullets.empty()
+            self._create_fleet()
 
     def _check_fleet_edges(self):
         """Respond appropriately if any aliens have reached an edge.
@@ -241,11 +250,8 @@ class AlienInvasion:
                 break
 
     def _change_fleet_direction(self):
-        """Drop the entire fleet and change the fleet's direction.
+        """Drop the entire fleet and change the fleet's direction."""
         
-        When the fleet reaches an edge, all aliens drop by fleet_drop_speed
-        pixels and the fleet's direction is reversed.
-        """
         for alien in self.aliens.sprites():
             alien.rect.y += self.settings.fleet_drop_speed
         self.settings.fleet_direction *= -1
