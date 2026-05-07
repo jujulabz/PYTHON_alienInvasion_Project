@@ -23,6 +23,11 @@ class Settings:
         self.bullet_color = (60, 60, 60)
         self.bullets_allowed = 3
 
+        # Milestone 3: Alien bullet settings
+        self.alien_bullet_speed = 1.5
+        self.alien_bullets_allowed = 2
+        self.alien_fire_chance = 0.006
+
         # Alien settings
         self.alien_speed = 1.0
         self.fleet_drop_speed = 10

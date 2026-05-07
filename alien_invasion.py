@@ -5,6 +5,7 @@ event handling, and coordination between game objects (ship, bullets, aliens).
 """
 
 import sys
+from random import choice, random
 from time import sleep
 
 import pygame
@@ -14,6 +15,8 @@ from game_stats import GameStats
 from ship import Ship
 from bullet import Bullet
 from alien import Alien
+# Milestone 3: Import alien bullets so aliens can shoot back.
+from alien_bullets import AlienBullet
 
 
 class AlienInvasion:
@@ -36,21 +39,54 @@ class AlienInvasion:
         pygame.init()
         self.settings = Settings()
         self.stats = GameStats(self)
-        self.game_active = True
+        self.game_active = False
+        self.game_over = False
+        self.restart_grace_frames = 0
 
         self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         self.settings.screen_width = self.screen.get_rect().width
         self.settings.screen_height = self.screen.get_rect().height
         pygame.display.set_caption("Alien Invasion")
         self.clock = pygame.time.Clock()
+        self.screen_rect = self.screen.get_rect()
 
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
+        # Milestone 3: Group for bullets fired by aliens.
+        self.alien_bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
 
-        self._create_fleet()
+        # Milestone 2: Create the Play, Play Again, and Quit buttons.
+        self._create_buttons()
 
         self.bg_color = self.settings.bg_color
+
+    def _create_buttons(self):
+        """Create the play, play again, and quit buttons."""
+        # Milestone 2: Set up the start and game-over buttons.
+        self.button_font = pygame.font.SysFont(None, 48)
+        self.title_font = pygame.font.SysFont(None, 84)
+        self.play_button = self._make_button("Play", self.screen_rect.center)
+        self.play_again_button = self._make_button(
+            "Play Again", (self.screen_rect.centerx, self.screen_rect.centery + 45))
+        self.quit_button = self._make_button(
+            "Quit", (self.screen_rect.centerx, self.screen_rect.centery + 125))
+
+    def _make_button(self, message, center):
+        """Return a simple button with its rendered label."""
+        button_color = (40, 120, 90)
+        text_color = (255, 255, 255)
+        rect = pygame.Rect(0, 0, 260, 64)
+        rect.center = center
+        image = self.button_font.render(message, True, text_color, button_color)
+        image_rect = image.get_rect()
+        image_rect.center = rect.center
+        return {
+            "rect": rect,
+            "image": image,
+            "image_rect": image_rect,
+            "color": button_color,
+        }
     
     def _create_fleet(self):
         """Create the fleet of aliens."""
@@ -85,6 +121,7 @@ class AlienInvasion:
             if self.game_active:
                 self.ship.update()
                 self._update_bullets()
+                self._update_alien_bullets()
                 self._update_aliens()
                 self._check_bullet_alien_collisions()
 
@@ -117,6 +154,9 @@ class AlienInvasion:
                 self._check_keydown_events(event)
             elif event.type == pygame.KEYUP:
                 self._check_keyup_events(event)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # Milestone 2: Let players click Play, Play Again, or Quit.
+                self._check_mouse_events(event.pos)
 
     def _check_keydown_events(self, event):
         """Respond to keypresses.
@@ -141,6 +181,20 @@ class AlienInvasion:
         elif event.key == pygame.K_p:
             if not self.game_active:
                 self._restart_game()
+
+    def _check_mouse_events(self, mouse_pos):
+        """Respond to mouse clicks on menu and game-over buttons."""
+        # Milestone 2: Handle Play, Play Again, and Quit button clicks.
+        if self.game_active:
+            return
+
+        if self.game_over:
+            if self.play_again_button["rect"].collidepoint(mouse_pos):
+                self._restart_game()
+            elif self.quit_button["rect"].collidepoint(mouse_pos):
+                sys.exit()
+        elif self.play_button["rect"].collidepoint(mouse_pos):
+            self._restart_game()
 
     def _check_keyup_events(self, event):
         """Respond to key releases.
@@ -168,31 +222,68 @@ class AlienInvasion:
             new_bullet = Bullet(self)
             self.bullets.add(new_bullet)
 
+    def _fire_alien_bullet(self):
+        """Randomly fire one alien bullet from a living alien."""
+        # Milestone 3: Randomly let aliens shoot back at the player.
+        if not self.aliens:
+            return
+
+        if self.restart_grace_frames > 0:
+            self.restart_grace_frames -= 1
+            return
+
+        if len(self.alien_bullets) >= self.settings.alien_bullets_allowed:
+            return
+
+        if random() < self.settings.alien_fire_chance:
+            alien = choice(self.aliens.sprites())
+            self.alien_bullets.add(AlienBullet(self, alien))
+
     def _update_screen(self):
         """Update images on the screen and flip to the new screen."""
         self.screen.fill(self.settings.bg_color)
 
-        # Draw all active bullets.
-        for bullet in self.bullets.sprites():
-            bullet.draw_bullet()
-        self.ship.blitme()
-        # Draw all active aliens.
-        self.aliens.draw(self.screen)
+        if self.game_active:
+            # Draw all active bullets.
+            for bullet in self.bullets.sprites():
+                bullet.draw_bullet()
+            # Milestone 3: Draw alien bullets.
+            for bullet in self.alien_bullets.sprites():
+                bullet.draw_bullet()
+            self.ship.blitme()
+            # Draw all active aliens.
+            self.aliens.draw(self.screen)
 
-        # Draw game over message if game is not active.
-        if not self.game_active:
+        if not self.game_active and self.game_over:
             self._draw_game_over()
+        elif not self.game_active:
+            self._draw_start_screen()
 
         pygame.display.flip()
 
-    # Milestone 2: Add game over message and restart functionality
+    def _draw_button(self, button):
+        """Draw one button on the screen."""
+        pygame.draw.rect(self.screen, button["color"], button["rect"])
+        self.screen.blit(button["image"], button["image_rect"])
+
+    def _draw_start_screen(self):
+        """Draw the opening play screen."""
+        # Milestone 2: Draw the opening Play button screen.
+        title_image = self.title_font.render("Alien Invasion", True, (30, 30, 30))
+        title_rect = title_image.get_rect()
+        title_rect.center = (self.screen_rect.centerx, self.screen_rect.centery - 90)
+        self.screen.blit(title_image, title_rect)
+        self._draw_button(self.play_button)
+
+    # Milestone 2: Add game over message and Play Again/Quit buttons.
     def _draw_game_over(self):
         """Draw the game over message on the screen."""
-        font = pygame.font.SysFont(None, 80)
-        game_over_text = font.render("Game Over! Press P to Play Again", True, (255, 0, 0))
+        game_over_text = self.title_font.render("Game Over", True, (180, 0, 0))
         text_rect = game_over_text.get_rect()
-        text_rect.center = self.screen.get_rect().center
+        text_rect.center = (self.screen_rect.centerx, self.screen_rect.centery - 80)
         self.screen.blit(game_over_text, text_rect)
+        self._draw_button(self.play_again_button)
+        self._draw_button(self.quit_button)
 
     def _update_bullets(self):
         """Update position of bullets and remove off-screen bullets."""
@@ -203,6 +294,19 @@ class AlienInvasion:
         for bullet in self.bullets.copy():
             if bullet.rect.bottom <= 0:
                  self.bullets.remove(bullet)
+
+    def _update_alien_bullets(self):
+        """Update alien bullets and check whether they hit the ship."""
+        # Milestone 3: Move alien bullets and check if they hit the ship.
+        self._fire_alien_bullet()
+        self.alien_bullets.update()
+
+        for bullet in self.alien_bullets.copy():
+            if bullet.rect.top >= self.settings.screen_height:
+                self.alien_bullets.remove(bullet)
+
+        if pygame.sprite.spritecollideany(self.ship, self.alien_bullets):
+            self._ship_hit()
 
     def _check_fleet_edges(self):
         """Respond appropriately if any aliens have reached an edge.
@@ -224,18 +328,27 @@ class AlienInvasion:
 
     def _ship_hit(self):
         """Respond to the ship being hit by an alien."""
-        if self.stats.ships_left > 0:
-            # Decrement ships_left.
+        if self.stats.ships_left > 1:
             self.stats.ships_left -= 1
 
-        # Create a new fleet and center the ship.
+            # Create a new fleet and center the ship.
+            self.bullets.empty()
+            self.alien_bullets.empty()
+            self.aliens.empty()
+            self.settings.fleet_direction = 1
+            self.restart_grace_frames = 90
             self._create_fleet()
             self.ship.center_ship()
 
             # Pause.
             sleep(0.5)
         else:
+            self.stats.ships_left = 0
             self.game_active = False
+            self.game_over = True
+            self.bullets.empty()
+            self.alien_bullets.empty()
+            self.aliens.empty()
 
     def _check_aliens_bottom(self):
         """Check if any aliens have reached the bottom of the screen."""
@@ -244,7 +357,7 @@ class AlienInvasion:
                 # Treat this the same as if the ship got hit.
                 self._ship_hit()
                 break
-#Milestone 2
+# Milestone 2
     def _check_bullet_alien_collisions(self):
         """Check for collisions between bullets and aliens.
         
@@ -254,7 +367,7 @@ class AlienInvasion:
         collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
         if collisions:
             print(f"Aliens destroyed: {len(collisions)}")
-#Milestone 2
+# Milestone 2: Restart the game after pressing P or Play Again.
     def _restart_game(self):
         """Restart the game after game over."""
         # Reset game stats.
@@ -263,7 +376,11 @@ class AlienInvasion:
 
         # Clear bullets and aliens.
         self.bullets.empty()
+        self.alien_bullets.empty()
         self.aliens.empty()
+        self.settings.fleet_direction = 1
+        self.game_over = False
+        self.restart_grace_frames = 90
 
         # Create a new fleet and center the ship.
         self._create_fleet()
